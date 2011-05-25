@@ -99,7 +99,15 @@ handle_messages([Chunk|Rest], Pid, PidRef, IbrowseRef, State) ->
         #state{}
     catch
     throw:{invalid_json, Bad} ->
-        State#state{partial_chunk = Bad}
+        PartialChunk = case Bad of
+            {{error, insufficient_data}, Bin} ->
+                Bin;
+            {{error, {0, _Lexical_error}}, Bin} ->
+                Bin;
+            Else ->
+                Else
+        end,
+        State#state{partial_chunk = PartialChunk}
     end,
     handle_messages(Rest,  Pid, PidRef, IbrowseRef, NewState).
 
