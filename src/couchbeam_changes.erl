@@ -61,6 +61,10 @@ continuous_acceptor(Pid, PidRef, IbrowseRef, State) ->
             Pid ! {PidRef, done};
         {ibrowse_async_response, IbrowseRef, {error,Error}} ->
             Pid ! {PidRef, {error, Error}};
+        {ibrowse_async_response, IbrowseRef, <<"\n">>} ->
+            Pid ! {PidRef, heartbeat},
+            ibrowse:stream_next(IbrowseRef),
+            continuous_acceptor(Pid, PidRef, IbrowseRef, State);
         {ibrowse_async_response, IbrowseRef, Chunk} ->
             Messages = [M || M <- re:split(Chunk, ",?\n", [trim]), M =/= <<>>],
             {ok, State1} = handle_messages(Messages, Pid, PidRef, IbrowseRef, State),
